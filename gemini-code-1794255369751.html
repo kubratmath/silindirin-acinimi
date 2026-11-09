@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Matematiküb — Silindir Yüzey & Çevre Keşif Atölyesi</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <style>
+    :root {
+      --bg-cream: #FAF7EE;
+      --forest-green: #11352A;
+      --mint: #70C19B;
+      --coral: #F36647;
+      --mustard: #F0B26E;
+      --white: #FFFFFF;
+      --border-thick: 3px solid #11352A;
+      --shadow-brutal: 4px 4px 0px #11352A;
+      --shadow-brutal-sm: 2px 2px 0px #11352A;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+
+    body {
+      background-color: var(--bg-cream);
+      background-image: radial-gradient(#11352A 0.75px, transparent 0.75px);
+      background-size: 16px 16px;
+      color: var(--forest-green);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    header {
+      background-color: var(--white);
+      border-bottom: var(--border-thick);
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 0px #11352A;
+      z-index: 10;
+    }
+
+    h1 { font-size: 1.2rem; font-weight: 900; color: var(--forest-green); text-transform: uppercase; letter-spacing: 0.5px; }
+    .brand-tag { background-color: var(--mustard); border: 2px solid var(--forest-green); padding: 4px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 800; box-shadow: var(--shadow-brutal-sm); }
+
+    .main-container { display: flex; flex: 1; height: calc(100vh - 60px); position: relative; }
+
+    .sidebar {
+      width: 400px;
+      background-color: var(--white);
+      border-right: var(--border-thick);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      overflow-y: auto;
+      z-index: 5;
+    }
+
+    .card {
+      background-color: var(--bg-cream);
+      border: var(--border-thick);
+      border-radius: 10px;
+      padding: 16px;
+      box-shadow: var(--shadow-brutal-sm);
+    }
+
+    .card-title { font-size: 0.95rem; font-weight: 900; color: var(--forest-green); margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+
+    .control-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+    label { font-size: 0.82rem; font-weight: 800; color: var(--forest-green); display: flex; justify-content: space-between; }
+    input[type="range"] { width: 100%; height: 8px; border-radius: 4px; background: #e2e8f0; outline: none; accent-color: var(--coral); }
+
+    .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+    .preset-btn {
+      background-color: var(--white);
+      border: 2px solid var(--forest-green);
+      padding: 10px 8px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: var(--shadow-brutal-sm);
+      transition: transform 0.1s;
+    }
+    .preset-btn:active { transform: translate(2px, 2px); box-shadow: none; }
+
+    .alert-square {
+      background-color: var(--mustard);
+      border: 2px solid var(--forest-green);
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--forest-green);
+      text-align: center;
+      box-shadow: var(--shadow-brutal-sm);
+      line-height: 1.5;
+    }
+
+    .discovery-text {
+      margin-top: 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      background-color: rgba(255, 255, 255, 0.75);
+      border-radius: 6px;
+      padding: 8px;
+      border: 1px dashed var(--forest-green);
+      color: #7c2d12;
+      text-align: left;
+    }
+
+    .viewport { flex: 1; position: relative; background-color: var(--bg-cream); }
+    #canvas-container { width: 100%; height: 100%; }
+
+    .overlay-btn {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background-color: var(--white);
+      border: var(--border-thick);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: 0.85rem;
+      color: var(--forest-green);
+      cursor: pointer;
+      box-shadow: var(--shadow-brutal-sm);
+    }
+
+    .calc-panel {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      background-color: var(--white);
+      border: var(--border-thick);
+      border-radius: 10px;
+      padding: 14px 18px;
+      box-shadow: var(--shadow-brutal);
+      min-width: 270px;
+    }
+
+    .calc-row { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 4px; font-weight: 700; }
+    .calc-val { font-weight: 900; color: var(--coral); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Matematiküb — Silindir Yüzey & Çevre Keşif Atölyesi</h1>
+    <span class="brand-tag">İnteraktif Laboratuvar</span>
+  </header>
+
+  <div class="main-container">
+    <div class="sidebar">
+
+      <!-- AÇINIM KONTROLÜ -->
+      <div class="card">
+        <div class="card-title">
+          <span>Açınım & Görünüm</span>
+          <span style="font-size:0.75rem; background:var(--mint); padding:2px 6px; border-radius:4px; border:1px solid #11352A;">3D → 2D</span>
+        </div>
+        <div class="control-group">
+          <label>Silindiri Aç (Unfold): <span id="val-unfold">0%</span></label>
+          <input type="range" id="slider-unfold" min="0" max="100" value="0" oninput="updateLab()">
+        </div>
+      </div>
+
+      <!-- BOYUT VE KEŞİF KONTROLLERİ (TAM SAYI AYARLI) -->
+      <div class="card">
+        <div class="card-title">Boyut ve Parametre Ayarları</div>
+
+        <div class="control-group">
+          <label>Taban Yarıçapı (r): <span id="val-r">4 cm</span></label>
+          <input type="range" id="slider-r" min="1" max="8" step="1" value="4" oninput="updateLab()">
+        </div>
+
+        <div class="control-group">
+          <label>Kutu Yüksekliği (h): <span id="val-h">16 cm</span></label>
+          <input type="range" id="slider-h" min="6" max="48" step="1" value="16" oninput="updateLab()">
+        </div>
+
+        <div class="btn-group">
+          <button class="preset-btn" onclick="setPreset(4, 24)">📦 1. Kutu (r=4, h=24)</button>
+          <button class="preset-btn" onclick="setPreset(4, 18)">📦 2. Kutu (r=4, h=18)</button>
+        </div>
+      </div>
+
+      <!-- DİNAMİK KARE YANAL YÜZEY BİLDİRİMİ VE ÇIKARIM METNİ -->
+      <div id="alert-square" class="alert-square" style="display:none;">
+        ✨ <strong>KEŞİF! Yanal Yüzey Tam Bir Kare Oldu!</strong><br>
+        <span style="font-size:0.8rem;">(Yükseklik = Taban Çevresi = 2πr = <span id="alert-circ-val">24</span> cm)</span>
+        
+        <div class="discovery-text">
+          💡 <strong>Matematiksel Çıkarım:</strong><br>
+          Taban yarıçapı <strong>r = <span id="text-r-val">4</span> cm</strong> iken yüksekliği taban çevresi kadar (<strong>2 · π · <span id="text-r-sub">4</span> = <span id="text-circ-val">24</span> cm</strong>) seçildiğinde yanal yüzey kareye dönüşür.
+        </div>
+      </div>
+
+    </div>
+
+    <div class="viewport">
+      <div id="canvas-container"></div>
+      <button class="overlay-btn" onclick="resetCam()">Kamerayı Sıfırla</button>
+
+      <!-- CANLI GEOMETRİK ANALİZ PANELİ -->
+      <div class="calc-panel">
+        <div class="calc-row"><span>Taban Yarıçapı (r):</span><span class="calc-val" id="res-r">4 cm</span></div>
+        <div class="calc-row"><span>Taban Çevresi (2πr):</span><span class="calc-val" id="res-circ">24 cm</span></div>
+        <div class="calc-row"><span>Kutu Yüksekliği (h):</span><span class="calc-val" id="res-h">16 cm</span></div>
+        <div class="calc-row"><span>Yanal Yüzey Biçimi:</span><span class="calc-val" id="res-shape">Dikdörtgen</span></div>
+        <hr style="margin: 6px 0; border: none; border-top: 2px dashed #11352A;">
+        <div class="calc-row"><span>Yanal Alan (2πr × h):</span><span class="calc-val" id="res-lat">384 cm²</span></div>
+        <div class="calc-row"><span>2 Taban Alanı (2 × πr²):</span><span class="calc-val" id="res-base">96 cm²</span></div>
+        <div class="calc-row"><span>Toplam Karton Alanı:</span><span class="calc-val" id="res-total" style="color:var(--coral);">480 cm²</span></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let scene, camera, renderer, controls;
+    let cylinderGroup, lateralMesh, topCapMesh, bottomCapMesh;
+
+    function initEngine() {
+      const container = document.getElementById('canvas-container');
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0xFAF7EE);
+
+      camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+      camera.position.set(28, 20, 36);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(container.clientWidth, container.clientHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.shadowMap.enabled = true;
+      container.appendChild(renderer.domElement);
+
+      controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+
+      const light1 = new THREE.AmbientLight(0xffffff, 0.75);
+      scene.add(light1);
+
+      const light2 = new THREE.DirectionalLight(0xffffff, 0.55);
+      light2.position.set(25, 35, 25);
+      light2.castShadow = true;
+      scene.add(light2);
+
+      const grid = new THREE.GridHelper(50, 25, 0x11352A, 0x70C19B);
+      grid.position.y = -12;
+      scene.add(grid);
+
+      cylinderGroup = new THREE.Group();
+      scene.add(cylinderGroup);
+
+      window.addEventListener('resize', onResize);
+      updateLab();
+      renderLoop();
+    }
+
+    function renderLoop() {
+      requestAnimationFrame(renderLoop);
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    function onResize() {
+      const container = document.getElementById('canvas-container');
+      camera.aspect = container.clientWidth / container.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(container.clientWidth, container.clientHeight);
+    }
+
+    function resetCam() {
+      camera.position.set(28, 20, 36);
+      controls.target.set(0, 0, 0);
+    }
+
+    function setPreset(r, h) {
+      document.getElementById('slider-r').value = r;
+      document.getElementById('slider-h').value = h;
+      updateLab();
+    }
+
+    function updateLab() {
+      const r = parseInt(document.getElementById('slider-r').value, 10);
+      const h = parseInt(document.getElementById('slider-h').value, 10);
+      const unfoldVal = document.getElementById('slider-unfold').value;
+      const unfold = unfoldVal / 100;
+
+      document.getElementById('val-r').innerText = r + ' cm';
+      document.getElementById('val-h').innerText = h + ' cm';
+      document.getElementById('val-unfold').innerText = unfoldVal + '%';
+
+      const pi = 3;
+      const circ = 2 * pi * r;
+      const baseArea = 2 * (pi * r * r);
+      const latArea = circ * h;
+      const totalArea = baseArea + latArea;
+      const isSquare = (circ === h);
+
+      // Rozet ve Çıkarım Metnini Dinamik Güncelleme
+      if (isSquare) {
+        document.getElementById('alert-square').style.display = 'block';
+        document.getElementById('alert-circ-val').innerText = circ;
+        document.getElementById('text-r-val').innerText = r;
+        document.getElementById('text-r-sub').innerText = r;
+        document.getElementById('text-circ-val').innerText = circ;
+      } else {
+        document.getElementById('alert-square').style.display = 'none';
+      }
+
+      document.getElementById('res-r').innerText = r + ' cm';
+      document.getElementById('res-circ').innerText = circ + ' cm';
+      document.getElementById('res-h').innerText = h + ' cm';
+      document.getElementById('res-shape').innerText = isSquare ? 'Kare (h = 2πr)' : 'Dikdörtgen';
+      document.getElementById('res-lat').innerText = latArea + ' cm²';
+      document.getElementById('res-base').innerText = baseArea + ' cm²';
+      document.getElementById('res-total').innerText = totalArea + ' cm²';
+
+      drawCylinder(r, h, unfold);
+    }
+
+    function drawCylinder(r, h, unfold) {
+      while (cylinderGroup.children.length > 0) {
+        const obj = cylinderGroup.children[0];
+        if (obj.geometry) obj.geometry.dispose();
+        cylinderGroup.remove(obj);
+      }
+
+      const vR = r * 0.75;
+      const vH = h * 0.75;
+      const circ = 2 * Math.PI * vR;
+
+      const latMat = new THREE.MeshStandardMaterial({ color: 0xF36647, side: THREE.DoubleSide, roughness: 0.3 });
+      const capMat = new THREE.MeshStandardMaterial({ color: 0x70C19B, side: THREE.DoubleSide, roughness: 0.3 });
+
+      // Yanal Yüzey
+      const latGeo = new THREE.PlaneGeometry(circ, vH, 64, 1);
+      const pos = latGeo.attributes.position;
+
+      for (let i = 0; i < pos.count; i++) {
+        const x = pos.getX(i);
+        const y = pos.getY(i);
+        const theta = (x / circ) * (2 * Math.PI) * (1 - unfold);
+
+        if (unfold > 0.99) {
+          pos.setXYZ(i, x, y, 0);
+        } else {
+          const curR = vR;
+          const tx = curR * Math.sin(theta);
+          const tz = curR * Math.cos(theta) - curR;
+          pos.setXYZ(i, THREE.MathUtils.lerp(tx, x, unfold), y, THREE.MathUtils.lerp(tz, 0, unfold));
+        }
+      }
+      latGeo.computeVertexNormals();
+      lateralMesh = new THREE.Mesh(latGeo, latMat);
+      cylinderGroup.add(lateralMesh);
+
+      // Alt ve Üst Kapaklar
+      const capGeo = new THREE.CircleGeometry(vR, 64);
+      topCapMesh = new THREE.Mesh(capGeo, capMat);
+      bottomCapMesh = new THREE.Mesh(capGeo, capMat);
+
+      const capRotX = THREE.MathUtils.lerp(Math.PI / 2, 0, unfold);
+      const capZ = THREE.MathUtils.lerp(-vR, 0, unfold);
+
+      const topY = (vH / 2) + (unfold * vR);
+      const bottomY = (-vH / 2) - (unfold * vR);
+
+      topCapMesh.position.set(0, topY, capZ);
+      topCapMesh.rotation.x = -capRotX;
+
+      bottomCapMesh.position.set(0, bottomY, capZ);
+      bottomCapMesh.rotation.x = capRotX;
+
+      cylinderGroup.add(topCapMesh);
+      cylinderGroup.add(bottomCapMesh);
+    }
+
+    window.onload = initEngine;
+  </script>
+</body>
+</html>
