@@ -151,13 +151,12 @@
 
   <header>
     <h1>Silindir Yüzey & Çevre Keşif Atölyesi</h1>
-    <span class="brand-tag">İnteraktif Laboratuvar</span>
+    <span class="brand-tag">MEB 8. Sınıf Matematik</span>
   </header>
 
   <div class="main-container">
     <div class="sidebar">
 
-      <!-- AÇINIM KONTROLÜ -->
       <div class="card">
         <div class="card-title">
           <span>Açınım & Görünüm</span>
@@ -169,7 +168,6 @@
         </div>
       </div>
 
-      <!-- BOYUT VE KEŞİF KONTROLLERİ (TAM SAYI AYARLI) -->
       <div class="card">
         <div class="card-title">Boyut ve Parametre Ayarları</div>
 
@@ -189,7 +187,6 @@
         </div>
       </div>
 
-      <!-- DİNAMİK KARE YANAL YÜZEY BİLDİRİMİ VE ÇIKARIM METNİ -->
       <div id="alert-square" class="alert-square" style="display:none;">
         ✨ <strong>KEŞİF! Yanal Yüzey Tam Bir Kare Oldu!</strong><br>
         <span style="font-size:0.8rem;">(Yükseklik = Taban Çevresi = 2πr = <span id="alert-circ-val">24</span> cm)</span>
@@ -206,7 +203,6 @@
       <div id="canvas-container"></div>
       <button class="overlay-btn" onclick="resetCam()">Kamerayı Sıfırla</button>
 
-      <!-- CANLI GEOMETRİK ANALİZ PANELİ -->
       <div class="calc-panel">
         <div class="calc-row"><span>Taban Yarıçapı (r):</span><span class="calc-val" id="res-r">4 cm</span></div>
         <div class="calc-row"><span>Taban Çevresi (2πr):</span><span class="calc-val" id="res-circ">24 cm</span></div>
@@ -303,7 +299,6 @@
       const totalArea = baseArea + latArea;
       const isSquare = (circ === h);
 
-      // Rozet ve Çıkarım Metnini Dinamik Güncelleme
       if (isSquare) {
         document.getElementById('alert-square').style.display = 'block';
         document.getElementById('alert-circ-val').innerText = circ;
@@ -339,7 +334,6 @@
       const latMat = new THREE.MeshStandardMaterial({ color: 0xF36647, side: THREE.DoubleSide, roughness: 0.3 });
       const capMat = new THREE.MeshStandardMaterial({ color: 0x70C19B, side: THREE.DoubleSide, roughness: 0.3 });
 
-      // Yanal Yüzey
       const latGeo = new THREE.PlaneGeometry(circ, vH, 64, 1);
       const pos = latGeo.attributes.position;
 
@@ -361,7 +355,6 @@
       lateralMesh = new THREE.Mesh(latGeo, latMat);
       cylinderGroup.add(lateralMesh);
 
-      // Alt ve Üst Kapaklar
       const capGeo = new THREE.CircleGeometry(vR, 64);
       topCapMesh = new THREE.Mesh(capGeo, capMat);
       bottomCapMesh = new THREE.Mesh(capGeo, capMat);
